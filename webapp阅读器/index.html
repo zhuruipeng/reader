@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!--禁用识别电话号码-->
+    <meta name="format-dection" content="telephone=no">
+    <!--引用less-->
+    <link rel="stylesheet/less" type="text/css" href="./css/main.less" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/3.8.1/less.min.js" ></script>
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href=" //at.alicdn.com/t/font_933049_hw3ej8rhznp.css">
+    <title>Document</title>
+</head>
+<body>
+    <div id="root" class="container">
+        <div class="m-artical-action">
+            <div class="articla-action-mid" id="action-mid"></div>
+        </div>
+        <div class="top-nav" id="top-nav" style="display: none">
+            <div class="icon-back">
+                <i class="iconfont icon-fanhui"></i>
+            </div>
+            <div class="nav-title">返回书架</div>
+        </div>
+        <div id="fiction_chapter_title">
+        </div>
+        <div id="fiction_container" class="m-read-content">
+
+        </div>
+        <div class="bot-nav" id="bot-nav" style="display: none;">
+            <ul>
+                <li><span>目录</span><i class="iconfont icon-mulu"></i></li>
+                <li  id="fontsize"><span>字体</span><i class="iconfont icon-zitidaxiaoim"></i></li>
+                <li id="chg_dayngiht"><span id="ngiht_icon">夜间</span><i class="iconfont icon-yejianmoshi"></i></li>
+
+            </ul>
+        </div>
+        <!--字体层-->
+        <div class="nav-panel" id="font-container" style="display: none">
+                <div class="child-mod">
+                    <span>字号</span>
+                    <button id="large-font" class="font-size-button">大</button>
+                    <button id="small-font" class="font-size-button">小</button>
+                </div>
+                <div class="child-mod">
+                    <span>背景</span>
+                    <div class="bk-container">
+                        <div class="bk-container-current"></div>
+                    </div>
+                    <div class="bk-container">
+                        <div class="bk-container-current"></div>
+                    </div>
+                    <div class="bk-container">
+                        <div class="bk-container-current"></div>
+                    </div>
+            </div>
+        </div>
+        <div class="m-button-bar" >
+            <ul class="u-tab">
+                <li id="prev_button">上一章</li>
+                <li id="nex_button">下一章</li>
+            </ul>
+        </div>
+    </div>
+    <script src="js/zepto.min.js"></script>
+    <script> window.jQuery =$; </script>
+    <script src="js/jquery.jsonp.js"></script>
+    <script src="js/jquery.base64.js"></script>
+    <script>
+        (function () {
+            var Util = function () {
+                var prefix = 'html_reader';
+               var StorageGetter = function (key) {
+                return localStorage.getItem(prefix +key)
+               }
+               var StorageSetter = function (key,val) {
+                   return localStorage.setItem(prefix+key, val)
+               }
+               var getBSONP=function (url,callback) {
+                   return $.jsonp({
+                       url:url,
+                       cache:true,
+                       callback:'duokan_fiction_chapter',
+                       success:function (res) {
+                           var data = $.base64.decode(res);
+                           var json = decodeURIComponent(escape(data));
+                           callback(json);
+                       }
+                   })
+               }
+                return {
+                    getBSONP:getBSONP,
+                    StorageGetter:StorageGetter,
+                    StorageSetter:StorageSetter
+                }
+            } ();
+            var Dom = {
+                top_nav:$('#top-nav'),
+                bottom_nav: $('.bot-nav'),
+                ngiht_icon:$('#ngiht_icon'),
+            }
+            var Win = $(window);
+            var Doc = $(document);
+            var FictionContainer = $('#fiction_container');
+            var initFontSize =  Util.StorageGetter('font_size')|| 14;
+            initFontSize = parseInt(initFontSize);
+            FictionContainer.css('font-size',initFontSize);
+
+            function main() {
+                //todo 整个项目的入口函数
+                EventHandler ();
+               var readerModel =  ReaderModel ();
+               var readerUI = ReaderBaseFrame(FictionContainer);
+                readerModel.init(function (data) {
+                    readerUI(data);
+                })
+            }
+            function ReaderModel() {
+                //todo 实现和阅读器相关打数据交互的方法
+                var Chapter_id;
+                var init = function (UIcallback) {
+                    getFictionInfo(function () {
+                        getCurChapterContent(Chapter_id,function (data) {
+                            //todo
+                            UIcallback && UIcallback(data)
+                        })
+                    })
+                }
+                var getFictionInfo = function (callback) {
+                   $.get('data/chapter.json',function (data) {
+                       //todo 获取之后的回调
+                       Chapter_id = data.chapters[1].chapter_id;
+                       callback && callback();
+                   },'json');
+                }
+                var getCurChapterContent = function (chapter_id,callback) {
+                    $.get(`data/data${chapter_id}` +'.json',function (data) {
+                        if(data.result===0) {
+                            var url = data.jsonp;
+                            Util.getBSONP(url,function (data) {
+
+                                // console.log(data);
+                                callback && callback(data);
+                            })
+                        }
+                    },'json')
+                }
+                return {
+                    init:init
+                }
+            }
+            function ReaderBaseFrame(container) {
+                // todo 渲染基本的ui结构
+                function parseChapterData(jsonData) {
+                    var jsonObj = JSON.parse(jsonData);
+                    var html = '<h4>' + jsonObj.t + '</h4>';
+                    for (var i = 0; i <jsonObj.p.length ; i++) {
+                        html += '<p>' +jsonObj.p[i] +'</p>'
+                    }
+                    return html;
+                }
+                    return function (data) {
+                        container.html(parseChapterData(data));
+                    }
+            }
+            function EventHandler() {
+                //todo 交互打实现绑定
+                //4.0 click 300ms
+                $('#action-mid').click(function () {
+                    if(Dom.top_nav.css('display') === 'none') {
+                        Dom.top_nav.show();
+                        Dom.bottom_nav.show();
+                    }else {
+                        Dom.top_nav.hide();
+                        Dom.bottom_nav.hide();
+                        $('#font-container').hide();
+                        $('#fontsize').removeClass('current')
+                    }
+                });
+                //点击弹出字体按钮更改
+                $('#fontsize').click(function () {
+                    if($('#font-container').css('display')==='none'){
+                        $('#font-container').show();
+                        $('#fontsize').addClass('current')
+                    }else{
+                        $('#font-container').hide();
+                        $('#fontsize').removeClass('current')
+                    }
+                });
+                $('#chg_dayngiht').click(function () {
+                    // TODO 触发背景切换
+                    if ( Dom.ngiht_icon.text()==="白天") {
+                        Dom.ngiht_icon.text("夜晚")
+                    }else {
+                        Dom.ngiht_icon.text("白天")
+                    }
+                });
+                Win.scroll(function () {
+                    Dom.top_nav.hide();
+                    Dom.bottom_nav.hide();
+                    $('#font-container').hide();
+                    $('#fontsize').removeClass('current')
+                });
+                $('#large-font').click(function () {
+                    if(initFontSize>20){
+                        return;
+                    }
+                    initFontSize += 1;
+                    FictionContainer.css('font-size',initFontSize);
+                    Util.StorageSetter('font_size',initFontSize)
+                });
+                $('#small-font').click(function () {
+                    if(initFontSize<12){
+                        return;
+                    }
+                    initFontSize -= 1;
+                    FictionContainer.css('font-size',initFontSize);
+                    Util.StorageSetter('font_size',initFontSize)
+                });
+            }
+            main();
+        }) ();
+    </script>
+</body>
+</html>

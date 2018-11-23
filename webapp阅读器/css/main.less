@@ -1,0 +1,180 @@
+//定义部分
+@bg1: #e9dfc7;//背景色
+@col: #736357; //标题字体颜色
+.backg(@color:#000) {
+  background: @color;
+}
+.fontsize(@size: 12px) {
+  font-size: @size //字体大小
+}
+
+//主体部分
+html {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  body {
+    .current {
+      color: #ff7800 !important;
+    }
+
+    text-align: left;
+    width: 100%;
+    overflow: hidden;
+    .backg(@bg1) !important;
+    .top-nav {
+      position: fixed;
+      top: 0;
+      height: 50px;
+      width: 100%;
+      z-index: 999;
+      .backg;
+      opacity: 0.9;
+      .icon-back {
+        position: absolute;
+        top: 16px;
+        left: 10px;
+        .icon-fanhui{
+          font-size: 23px ;
+          color: #d5d5d6;
+        }
+      }
+      .nav-title {
+        position: absolute;
+        top: 16px;
+        left: 42px;
+        color: #d5d5d6;
+      }
+    }
+    .m-read-content {
+      font-size: 14px;
+      color: #555;
+      line-height: 31px;
+      padding: 15px;
+      p {
+        text-indent: 2em;
+        margin: 0.5em 0;
+        letter-spacing: 0;
+        line-height: 24px;
+      }
+    }
+    .m-read-content h4 {
+      font-size: 20px;
+      color: @col;
+      border-bottom: solid 1px @col;
+      letter-spacing: 2px;
+      margin: 0 0 1em 0;
+    }
+
+    .nav-panel{
+      z-index: 1000;
+      position: fixed;
+      bottom: 0;
+      height: 150px;
+      width: 100%;
+     .backg;
+      opacity: 0.9;
+      .child-mod {
+        margin: 10px 0 15px 0 ;
+        color: #fff;
+        font-size: 14px;
+        span {
+          margin-top: 20px;
+        }
+        .font-size-button {
+          margin-left: 15px;
+          background: none;
+          height: 25px;
+          width: 80px;
+          border: 1px solid #8c8c8c;
+          border-radius: 25px;
+          padding-left: 5px;
+          .backg;
+          opacity: 0.8;
+          color: #fff;
+        }
+        .bk-container {
+          margin-left: 15px;
+          vertical-align:-14px ;
+          position: relative;
+          width: 30px;
+          height: 30px;
+          border-radius: 15px;
+          background: #ffff;
+          display: inline-block;
+          .bk-container-current {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 32px;
+            height: 32px;
+            border-radius:16px;
+            border:1px solid #ff7800;
+              }
+            }
+          }
+        }
+    .m-button-bar {
+      z-index:1;
+      width: 70%;
+      max-width: 800px;
+      padding: 5px;
+      margin: 0 auto;
+      .u-tab {
+        height: 34px;
+        margin: 10px auto;
+        line-height: 34px;
+        border-radius: 8px;
+        border: 1px solid #858382;
+        .fontsize(12px);
+        .backg;
+        opacity: 0.9;
+        li {
+          display: inline-block;
+          width: 49%;
+          border-right: 1px solid #858382;
+          text-align: center;
+          color: #fff;
+        }
+        :last-child {
+          border-right: 0px;
+        }
+      }
+    }
+      }
+    }
+
+.articla-action-mid
+{
+  position: fixed;
+  z-index: 10000;
+  height: 40%;
+  width: 100%;
+  top: 30%;
+}
+
+.bot-nav{
+  .backg;
+  position: fixed;
+  bottom: 0;
+  height: 50px;
+  width: 100%;
+  z-index: 10099;
+  opacity: 0.9;
+  ul {
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    li{
+      width: 33%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      color: #d5d5d6;
+    }
+  }
+}
