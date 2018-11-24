@@ -104,6 +104,8 @@
             }
             var Win = $(window);
             var Doc = $(document);
+            var readerModel;
+            var readerUI;
             var FictionContainer = $('#fiction_container');
             var initFontSize =  Util.StorageGetter('font_size')|| 14;
             initFontSize = parseInt(initFontSize);
@@ -112,8 +114,8 @@
             function main() {
                 //todo 整个项目的入口函数
                 EventHandler ();
-               var readerModel =  ReaderModel ();
-               var readerUI = ReaderBaseFrame(FictionContainer);
+                readerModel =  ReaderModel ();
+                readerUI = ReaderBaseFrame(FictionContainer);
                 readerModel.init(function (data) {
                     readerUI(data);
                 })
@@ -121,21 +123,53 @@
             function ReaderModel() {
                 //todo 实现和阅读器相关打数据交互的方法
                 var Chapter_id;
+                var ChapterTotal;
                 var init = function (UIcallback) {
-                    getFictionInfo(function () {
+                  /*  getFictionInfo(function () {
                         getCurChapterContent(Chapter_id,function (data) {
                             //todo
                             UIcallback && UIcallback(data)
                         })
-                    })
-                }
+                    }) */
+                  getFictionInfoPromise().then(function (d) {
+                  //     getCurChapterContent(Chapter_id,function (data) {
+                  //         //todo
+                  //         UIcallback && UIcallback(data)
+                  // });
+                      return getCurChapterContentPromise();
+              }).then(function (data) {
+                      UIcallback && UIcallback(data)
+                  })
+            };
                 var getFictionInfo = function (callback) {
                    $.get('data/chapter.json',function (data) {
                        //todo 获取之后的回调
-                       Chapter_id = data.chapters[1].chapter_id;
+                       Chapter_id = Util.StorageGetter('last_chapter_id')
+                       if(Chapter_id === null){
+                           Chapter_id = data.chapters[1].chapter_id;
+                       }
+                       ChapterTotal = data.chapters.length;
                        callback && callback();
                    },'json');
-                }
+                };
+                var getFictionInfoPromise =function () {
+                return new Promise(function (resolve, reject) {
+                    $.get('data/chapter.json', function (data) {
+                        if (data.result === 0) {
+                            Chapter_id = Util.StorageGetter('last_chapter_id')
+                            if (Chapter_id === null) {
+                                Chapter_id = data.chapters[1].chapter_id;
+                            }
+                            //todo 获取之后的回调
+                            ChapterTotal = data.chapters.length;
+                            resolve();
+                        }
+                        else {
+                            reject()
+                        }
+                    }, 'json');
+                });
+                };
                 var getCurChapterContent = function (chapter_id,callback) {
                     $.get(`data/data${chapter_id}` +'.json',function (data) {
                         if(data.result===0) {
@@ -148,8 +182,45 @@
                         }
                     },'json')
                 }
+                var getCurChapterContentPromise = function () {
+                  return  new Promise(function (resolve, reject) {
+                        $.get(`data/data${Chapter_id}` + '.json', function (data) {
+                            if (data.result === 0) {
+                                var url = data.jsonp;
+                                Util.getBSONP(url, function (data) {
+                                    // callback && callback(data);
+                                    resolve(data);
+                                })
+                            } else {
+                                reject({msg: 'fail'})
+                            }
+                        }, 'json')
+                    })
+                }
+                var prevChapter = function (UIcallback) {
+                    Chapter_id = parseInt(Chapter_id,10);
+                    if (Chapter_id === 1) {
+                        return
+                    }
+                    Chapter_id = Chapter_id -1;
+                    getCurChapterContent(Chapter_id,UIcallback)
+                    Util.StorageSetter('last_chapter_id',Chapter_id)
+                }
+                var nextChapter = function (UIcallback) {
+                    Chapter_id = parseInt(Chapter_id,10);
+                    if (Chapter_id ===ChapterTotal-1) {
+                        return
+                    }
+                    console.log(ChapterTotal);
+                    Chapter_id = Chapter_id + 1;
+                    getCurChapterContent(Chapter_id,UIcallback);
+                    Util.StorageSetter('last_chapter_id',Chapter_id);
+
+                }
                 return {
-                    init:init
+                    init:init,
+                    prevChapter:prevChapter,
+                    nextChapter:nextChapter,
                 }
             }
             function ReaderBaseFrame(container) {
@@ -220,6 +291,18 @@
                     FictionContainer.css('font-size',initFontSize);
                     Util.StorageSetter('font_size',initFontSize)
                 });
+                $('#prev_button').click(function () {
+                    //todo  获得章节的翻页数据，把数据拿来渲染
+                    readerModel.prevChapter(function (data) {
+                        readerUI(data);
+                    });
+
+                });
+                $('#nex_button').click(function () {
+                        readerModel.nextChapter(function (data) {
+                            readerUI(data);
+                        })
+                })
             }
             main();
         }) ();
